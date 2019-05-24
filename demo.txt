@@ -1,5 +1,30 @@
 demo(https://blog.csdn.net/h330531987/article/details/78081392)
 
+
+
+服务跑起来
+
+cd  web-msg-sender
+php start.php start -d
+然后就会看见如下输出
+
+Workerman[start.php] start in DAEMON mode
+ 
+----------------------- WORKERMAN -----------------------------
+Workerman version:3.2.8          PHP version:7.0.8-2
+------------------------ WORKERS -------------------------------
+user          worker        listen                   processes status
+sinux         PHPSocketIO   socketIO://0.0.0.0:2120   1         [OK] 
+sinux         WebServer     http://0.0.0.0:2123       1         [OK] 
+----------------------------------------------------------------
+Input "php start.php stop" to quit. Start success.
+ 
+这就是跑起来了，OK
+
+
+////////////////////////////////////////
+
+
 服务端推
 
 /application/lib/event/PushEvent.php
