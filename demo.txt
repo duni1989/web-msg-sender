@@ -1,0 +1,179 @@
+demo(https://blog.csdn.net/h330531987/article/details/78081392)
+
+服务端推
+
+/application/lib/event/PushEvent.php
+namespace app\lib\event;
+ 
+/**
+ * 推送事件
+ * 典型调用方式：
+ * $push = new PushEvent();
+ * $push->setUser($user_id)->setContent($string)->push();
+ *
+ * Class PushEvent
+ * @package app\lib\event
+ */
+class PushEvent
+{
+    /**
+     * @var string 目标用户id
+     */
+    protected $to_user = '';
+ 
+    /**
+     * @var string 推送服务地址
+     */
+    protected $push_api_url = 'http://127.0.0.1:2121/';
+ 
+    /**
+     * @var string 推送内容
+     */
+    protected $content = '';
+ 
+    /**
+     * 设置推送用户，若参数留空则推送到所有在线用户
+     *
+     * @param string $user
+     * @return $this
+     */
+    public function setUser($user = '')
+    {
+        $this->to_user = $user ? : '';
+        return $this;
+    }
+ 
+    /**
+     * 设置推送内容
+     *
+     * @param string $content
+     * @return $this
+     */
+    public function setContent($content = '')
+    {
+        $this->content = $content;
+        return $this;
+    }
+ 
+    /**
+     * 推送
+     */
+    public function push()
+    {
+        $data = [
+            'type' => 'publish',
+            'content' => $this->content,
+            'to' => $this->to_user,
+        ];
+        $ch = curl_init ();
+        curl_setopt($ch, CURLOPT_URL, $this->push_api_url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+        $res = curl_exec($ch);
+        curl_close($ch);
+        dump($res);
+ 
+    }
+}
+///////////////////////////////////////////////
+客户端(浏览器)收
+/application/demo/view/PushDemo/targetPage.html
+
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<strong id="count"></strong>
+ 
+<h1 id="target"></h1>
+</body>
+</html>
+<script src="http://cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+<script src='http://cdn.bootcss.com/socket.io/1.3.7/socket.io.js'></script>
+<script>
+    jQuery(function ($) {
+ 
+        // 连接服务端
+        var socket = io('http://127.0.0.1:2120'); //这里当然填写真实的地址了
+        // uid可以是自己网站的用户id，以便针对uid推送以及统计在线人数
+        uid = 123;
+        // socket连接后以uid登录
+        socket.on('connect', function () {
+            socket.emit('login', uid);
+        });
+        // 后端推送来消息时
+        socket.on('new_msg', function (msg) {
+            console.log("收到消息：" + msg);
+            $('#target').append(msg).append('<br>');
+        });
+        // 后端推送来在线数据时
+        socket.on('update_online_count', function (online_stat) {
+            console.log(online_stat);
+            $('#count').html(online_stat);
+        });
+    })
+ 
+</script>
+
+
+
+
+
+
+
+///////////////////////////////////////////////
+
+写个用例，试一下
+
+/application/demo/controller/PushDemo.php
+
+namespace app\demo\controller;
+ 
+ 
+use app\lib\event\PushEvent;
+ 
+/**
+ * 推送demo
+ *
+ * Class PushDemo
+ * @package app\demo\controller
+ */
+class PushDemo
+{
+    /**
+     * 推送一个字符串
+     */
+    public function pushAString()
+    {
+        $string = 'Man Always Remember Love Because Of Romance Only';
+        $string = input('msg') ? : $string;
+        $push = new PushEvent();
+        $push->setUser()->setContent($string)->push();
+ 
+ 
+    }
+ 
+    /**
+     * 推送目标页
+     *
+     * @return \think\response\View
+     */
+    public function targetPage()
+    {
+        return view();
+    }
+}
+
+
+
+
+///////////////////////////////////////////////
+
+
